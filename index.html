@@ -704,9 +704,10 @@
     border:1px solid var(--line);
     border-radius:20px;
     white-space:nowrap;
-    transition:color .25s ease, border-color .25s ease;
+    transition:color .25s ease, border-color .25s ease, background .25s ease;
   }
   .menu-quicknav-btn:hover, .menu-quicknav-btn:focus-visible{ color:var(--accent-soft); border-color:var(--accent); }
+  .menu-quicknav-btn.is-active{ color:var(--bg); background:var(--accent); border-color:var(--accent); }
 
   .menu-head h2{ margin-top:16px; max-width:20ch; font-style:italic; }
   .menu-head .lede{ margin-top:18px; }
@@ -826,13 +827,14 @@
     border-radius:2px;
     overflow:hidden;
     background:var(--bg);
+    box-shadow:0 20px 44px -22px rgba(0,0,0,.6);
   }
   .menu-detail-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
   .menu-detail-photo::after{
     content:"";
     position:absolute; inset:0;
-    background:linear-gradient(180deg, transparent 25%, var(--accent) 150%);
-    opacity:.3;
+    background:linear-gradient(180deg, rgba(15,31,23,.05) 0%, rgba(15,31,23,.55) 60%, var(--accent) 150%);
+    opacity:.55;
   }
 
   .menu-detail-title{
@@ -841,8 +843,12 @@
     position:relative;
     font-family:var(--font-display);
     font-style:italic;
-    font-weight:500;
-    font-size:1.9rem;
+    font-weight:600;
+    font-size:2.1rem;
+    background:linear-gradient(90deg, var(--cream) 0%, var(--accent-soft) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
   }
   .menu-detail-title::after{
     content:"";
@@ -854,6 +860,9 @@
   .menu-detail-body{ margin-top:8px; }
   .menu-section{ margin-top:36px; }
   .menu-section-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
     font-family:var(--font-mono);
     font-weight:700;
     font-size:11.5px;
@@ -861,11 +870,34 @@
     text-transform:uppercase;
     color:var(--accent);
     padding-bottom:10px;
+    position:relative;
     border-bottom:1px solid var(--line);
   }
+  .menu-section-title::before{
+    content:'';
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+  }
+  .menu-section-title::after{
+    content:'';
+    position:absolute; left:0; bottom:-1px;
+    width:46px; height:1px;
+    background:var(--accent-soft);
+  }
   .menu-line{
-    padding:14px 0;
+    padding:14px 0 14px 14px;
+    margin-left:-14px;
     border-bottom:1px solid var(--line);
+    border-left:2px solid transparent;
+    transition:border-color .3s ease, background .3s ease, padding-left .3s ease;
+    border-radius:0 2px 2px 0;
+  }
+  .menu-line:hover{
+    border-left-color:var(--accent);
+    background:rgba(255,255,255,.025);
+    padding-left:20px;
   }
   .menu-line:last-child{ border-bottom:none; }
   .menu-line-top{
@@ -886,9 +918,13 @@
   .menu-line-price{
     font-family:var(--font-mono);
     font-weight:700;
-    font-size:13px;
+    font-size:12.5px;
     color:var(--accent-soft);
     white-space:nowrap;
+    background:rgba(255,255,255,.06);
+    padding:4px 9px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.08);
   }
   .menu-line-desc{
     margin-top:5px;
@@ -2513,6 +2549,22 @@
 
       menuDetailBody.appendChild(secEl);
     });
+
+    // scroll-spy: highlight the quicknav pill for whichever section is in view
+    if (cat.sections.length > 1) {
+      const navButtons = Array.from(menuDetailBody.querySelectorAll('.menu-quicknav-btn'));
+      const sectionEls = cat.sections.map((s, idx) => document.getElementById('menu-sec-' + key + '-' + idx));
+      const spy = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const idx = sectionEls.indexOf(entry.target);
+            navButtons.forEach(b => b.classList.remove('is-active'));
+            if (navButtons[idx]) navButtons[idx].classList.add('is-active');
+          }
+        });
+      }, { root: menuModalPanel, rootMargin: '-72px 0px -70% 0px', threshold: 0 });
+      sectionEls.forEach(el => { if (el) spy.observe(el); });
+    }
   };
 
   const showMenuDetail = (key) => {
